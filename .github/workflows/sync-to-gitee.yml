@@ -8,10 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Push upstream (branches + tags) to Gitee
+      - name: Push main to Gitee (单分支,避开 Gitee 1GB 配额)
         run: |
-          git clone --bare https://github.com/NousResearch/hermes-agent.git repo
+          git clone --bare --single-branch --branch main https://github.com/NousResearch/hermes-agent.git repo
           cd repo
-          git push --force --prune \
-            "https://yngeek:${{ secrets.GITEE_TOKEN }}@gitee.com/yngeek/hermes-agent.git" \
-            "refs/heads/*:refs/heads/*" "refs/tags/*:refs/tags/*"
+          git push --force "https://yngeek:${{ secrets.GITEE_TOKEN }}@gitee.com/yngeek/hermes-agent.git" main:main
