@@ -1,0 +1,17 @@
+name: Mirror to Gitee
+on:
+  schedule:
+    - cron: '23 18 * * *'   # 每天北京时间 02:23
+  workflow_dispatch: {}      # 支持手动触发
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Push upstream (branches + tags) to Gitee
+        run: |
+          git clone --bare https://github.com/NousResearch/hermes-agent.git repo
+          cd repo
+          git push --force --prune \
+            "https://yngeek:${{ secrets.GITEE_TOKEN }}@gitee.com/yngeek/hermes-agent.git" \
+            "refs/heads/*:refs/heads/*" "refs/tags/*:refs/tags/*"
