@@ -9,7 +9,23 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Push main to Gitee (单分支,避开 Gitee 1GB 配额)
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
         run: |
+          set -euo pipefail
+          # 跨境网络抖动是间歇性失败的主因：push/clone 各自动重试，
+          # 失败时把 git 的原始报错打进日志，方便下次定位。
+          retry() {
+            local n=1
+            while [ "$n" -le 5 ]; do
+              if "$@"; then return 0; fi
+              echo "::warning::attempt $n/$5 failed: $* — retrying in 60s"
+              n=$((n + 1)); sleep 60
+            done
+            return 1
+          }
+          export GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=60
+          rm -rf repo
           git clone --bare --single-branch --branch main https://github.com/NousResearch/hermes-agent.git repo
           cd repo
-          git push --force "https://yngeek:${{ secrets.GITEE_TOKEN }}@gitee.com/yngeek/hermes-agent.git" main:main
+          retry git push --force "https://yngeek:${GITEE_TOKEN}@gitee.com/yngeek/hermes-agent.git" main:main
